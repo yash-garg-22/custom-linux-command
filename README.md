@@ -62,3 +62,55 @@ Interactions:
 
   User Interface:
         When you use internsctl, it's like having a conversation with your computer through typed commands.
+
+
+ COMMANDS
+
+ 
+CPU Information:
+
+./internsctl cpu getinfo
+
+Memory Information:
+
+./internsctl memory getinfo
+
+User Management:
+
+./internsctl user create <username>
+
+List All Regular Users:
+
+./internsctl user list
+
+List Users with sudo Permissions:
+
+./internsctl user list --sudo-only
+
+File Information:
+
+./internsctl file getinfo <file-name>
+
+Get File Size:
+
+./internsctl file getinfo --size <file-name>
+
+Get File Permissions:
+
+./internsctl file getinfo --permissions <file-name>
+
+Get File Owner:
+
+./internsctl file getinfo --owner <file-name>
+
+Get Last Modified Time:
+
+./internsctl file getinfo --last-modified <file-name>
+
+Display Help:
+
+./internsctl --help
+
+Display Version:
+
+./internsctl --version 
