@@ -1,0 +1,151 @@
+#!/bin/bash
+
+# Define version
+VERSION="v0.1.0"
+
+# Function to display help
+display_help() {
+    echo "Usage: internsctl [options]"
+    echo "Options:"
+    echo "  cpu getinfo            Display CPU information (similar to lscpu)"
+    echo "  memory getinfo         Display memory information (similar to free)"
+    echo "  user create <username> Create a new user with login access and home directory"
+    echo "  user list              List all regular users"
+    echo "  user list --sudo-only  List users with sudo permissions"
+    echo "  file getinfo <file>    Display file information"
+    echo "    Options:"
+    echo "      --size, -s          Print file size"
+    echo "      --permissions, -p   Print file permissions"
+    echo "      --owner, -o         Print file owner"
+    echo "      --last-modified, -m Print last modified time"
+    echo "  --help                 Display this help message"
+    echo "  --version              Display the version of internsctl"
+}
+
+# Function to get CPU information
+get_cpu_info() {
+    lscpu
+}
+
+# Function to get memory information
+get_memory_info() {
+    free
+}
+
+# Function to create a new user
+create_user() {
+    if [ -z "$2" ]; then
+        echo "Error: Missing username. Usage: internsctl user create <username>"
+        exit 1
+    fi
+
+    sudo useradd -m -s /bin/bash "$2"
+    sudo passwd "$2"
+}
+
+# Function to list all regular users
+list_users() {
+    cut -d: -f1,3 /etc/passwd | awk -F: '$2 >= 1000 && $2 < 65534 {print $1}'
+}
+
+# Function to list users with sudo permissions
+list_sudo_users() {
+    getent group sudo | cut -d: -f4 | tr ',' '\n'
+}
+
+# Function to get file information
+get_file_info() {
+    file="$2"
+    if [ ! -e "$file" ]; then
+        echo "Error: File '$file' not found."
+        exit 1
+    fi
+
+    # Get options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --size | -s)
+                stat --format="%s" "$file"
+                ;;
+            --permissions | -p)
+                stat --format="%A" "$file"
+                ;;
+            --owner | -o)
+                stat --format="%U" "$file"
+                ;;
+            --last-modified | -m)
+                stat --format="%y" "$file"
+                ;;
+            *)
+                ;;
+        esac
+        shift
+    done
+}
+
+# Parse command line arguments
+case "$1" in
+    cpu)
+        case "$2" in
+            getinfo)
+                get_cpu_info
+                ;;
+            *)
+                echo "Error: Unknown CPU subcommand. Use 'internsctl --help' for usage."
+                exit 1
+                ;;
+        esac
+        ;;
+    memory)
+        case "$2" in
+            getinfo)
+                get_memory_info
+                ;;
+            *)
+                echo "Error: Unknown memory subcommand. Use 'internsctl --help' for usage."
+                exit 1
+                ;;
+        esac
+        ;;
+    user)
+        case "$2" in
+            create)
+                create_user "$@"
+                ;;
+            list)
+                if [ "$3" == "--sudo-only" ]; then
+                    list_sudo_users
+                else
+                    list_users
+                fi
+                ;;
+            *)
+                echo "Error: Unknown user subcommand. Use 'internsctl --help' for usage."
+                exit 1
+                ;;
+        esac
+        ;;
+    file)
+        case "$2" in
+            getinfo)
+                shift 2
+                get_file_info "$@"
+                ;;
+            *)
+                echo "Error: Unknown file subcommand. Use 'internsctl --help' for usage."
+                exit 1
+                ;;
+        esac
+        ;;
+    --help)
+        display_help
+        ;;
+    --version)
+        echo "internsctl $VERSION"
+        ;;
+    *)
+        echo "Error: Unknown option. Use 'internsctl --help' for usage."
+        exit 1
+        ;;
+esac
+
